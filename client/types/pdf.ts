@@ -1,8 +1,12 @@
+export type PdfStatusType = "draft" | "queued" | "processing" | "completed" | "failed" | string;
+
 export interface Pdf {
     id: string;
     fileName: string;
     createdAt: string | null;
     htmlContent?: string | null;
+    status?: PdfStatusType;
+    errorMessage?: string | null;
 }
 
 export interface PdfListProps {

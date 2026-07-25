@@ -4,6 +4,34 @@ import { toast } from "sonner";
 import { userKeys, pdfKeys } from "@/lib/queryKeys";
 import { useEditorStore } from "@/store/useEditorStore";
 
+async function pollJobUntilComplete(jobId: string, onProgress?: (progress: number, status: string) => void) {
+  const maxAttempts = 120; // 3 minutes timeout (120 * 1.5s)
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const res = await fetch(`/api/jobs/${jobId}`);
+    if (!res.ok) continue;
+
+    const data = await res.json();
+    if (onProgress && data.progress !== undefined) {
+      onProgress(data.progress, data.state || data.pdfStatus);
+    }
+
+    if (data.state === "completed" || data.pdfStatus === "completed") {
+      return data;
+    }
+
+    if (data.state === "failed" || data.pdfStatus === "failed") {
+      throw new Error(data.error || "Generation failed during processing");
+    }
+  }
+
+  throw new Error("Job processing timed out. Please check your dashboard.");
+}
+
 export function useGeneratePdf() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -24,19 +52,32 @@ export function useGeneratePdf() {
 
       if (!res.ok) {
         if (res.status === 429) throw new Error("DAILY TOKEN LIMIT REACHED");
-        throw new Error("PDF Generation failed");
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || "PDF Generation request failed");
       }
-      return res.json();
+
+      const queueRes = await res.json();
+
+      // Update user credits immediately from response
+      if (queueRes.creditsLeft !== undefined) {
+        queryClient.setQueryData(userKeys.profile(), (oldUser: { creditsLeft?: number } | undefined) => {
+          if (!oldUser) return oldUser;
+          return {
+            ...oldUser,
+            creditsLeft: queueRes.creditsLeft,
+          };
+        });
+      }
+
+      // Poll until job completes
+      toast.info("Generation queued! Processing AI workflow in background...", { id: queueRes.jobId });
+      const completedJob = await pollJobUntilComplete(queueRes.jobId);
+      return {
+        ...queueRes,
+        htmlContent: completedJob.htmlContent,
+      };
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(userKeys.profile(), (oldUser: { creditsLeft?: number } | undefined) => {
-        if (!oldUser) return oldUser;
-        return {
-          ...oldUser,
-          creditsLeft: data.creditsLeft,
-        };
-      });
-
       queryClient.invalidateQueries({ queryKey: pdfKeys.lists() });
 
       const hasContext = !!variables.pdfId;
@@ -44,17 +85,17 @@ export function useGeneratePdf() {
       initializeEditor({
         id: data.pdfId,
         fileName: data.fileName,
-        html: data.data,
+        html: data.htmlContent || "",
         isContext: hasContext,
       });
 
-      toast.success(`"${data.fileName}" Generated Successfully!`);
+      toast.success(`"${data.fileName}" Generated Successfully!`, { id: data.jobId });
       router.push(`/edit/${data.pdfId}`);
     },
     onError: (error: Error) => {
       if (error.message !== "DAILY TOKEN LIMIT REACHED") {
         console.error(error);
-        toast.error("Failed to generate PDF");
+        toast.error(error.message || "Failed to generate PDF");
       }
     },
   });

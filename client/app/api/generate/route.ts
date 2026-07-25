@@ -1,6 +1,8 @@
 import { deduceCredits } from "@/db/credits";
-import { updatePdf, createPdf } from "@/db/pdfs";
+import { createPdf, updatePdf } from "@/db/pdfs";
 import { auth } from "@/lib/auth";
+import { addPdfGenerationJob } from "@/lib/queue";
+import { initWorkerIfNeeded } from "@/lib/workers/initWorker";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
@@ -9,7 +11,7 @@ const GenerateSchema = z.object({
   userPrompt: z.string().min(1),
   fileName: z.string().optional(),
   isContext: z.boolean().optional(),
-  pdfId: z.string().optional(), // Now optional
+  pdfId: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -47,46 +49,40 @@ export async function POST(req: Request) {
       throw creditErr;
     }
 
-    const PYTHON_URL = process.env.PYTHON_URL || "http://localhost:8000";
-    const res = await fetch(`${PYTHON_URL}/ai/generate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        secret1: process.env.secret as string,
-      },
-      body: JSON.stringify({
-        userId,
-        userPrompt,
-        pdfId, // Pass ID so AI knows where to find context
-        isContext: isContext || false,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Python API failed with status ${res.status}`);
-    }
-
-    const htmlContent = await res.json();
-    if (!htmlContent || typeof htmlContent !== "string") {
-      throw new Error("Invalid content from AI");
-    }
+    const docTitle = fileName || "Untitled Document";
 
     if (isNewDocument) {
-      await createPdf(pdfId, userId, fileName || "Untitled", htmlContent);
+      await createPdf(pdfId, userId, docTitle, "", "queued");
     } else {
-      await updatePdf(pdfId, userId, fileName || "Untitled", htmlContent);
+      await updatePdf(pdfId, userId, docTitle, undefined, "queued");
     }
 
-    return NextResponse.json({
-      success: true,
-      data: htmlContent,
+    // Initialize worker if needed
+    initWorkerIfNeeded();
+
+    const jobId = `job_${pdfId}_${Date.now()}`;
+    await addPdfGenerationJob({
+      jobId,
       pdfId,
-      fileName,
-      creditsLeft,
-      status: 200,
+      userId,
+      userPrompt,
+      fileName: docTitle,
+      isContext,
     });
+
+    return NextResponse.json(
+      {
+        success: true,
+        jobId,
+        pdfId,
+        fileName: docTitle,
+        status: "queued",
+        creditsLeft,
+      },
+      { status: 202 },
+    );
   } catch (err: unknown) {
-    console.error("HTML Generate Error:", err);
+    console.error("HTML Generate Enqueue Error:", err);
     if (userId && creditsDeducted) {
       try {
         await deduceCredits(userId, -4);

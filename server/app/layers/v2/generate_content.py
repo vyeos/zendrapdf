@@ -1,4 +1,4 @@
-# import os
+import os
 import json
 import logging
 from dotenv import load_dotenv
@@ -16,10 +16,19 @@ class WhitepaperOutput(BaseModel):
     styles: Dict[str, Dict[str, str]]
 
 
-llm = ChatGroq(
-    model="openai/gpt-oss-120b",
-    temperature=0,
-)
+groq_key = os.getenv("GROQ_API_KEY")
+if groq_key:
+    llm = ChatGroq(
+        model="openai/gpt-oss-120b",
+        temperature=0,
+    )
+else:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        temperature=0,
+        api_key=os.getenv("GOOGLE_API_KEY")
+    )
 structured_llm = llm.with_structured_output(WhitepaperOutput)
 
 async def generate_content(content_description: str, formatting_instructions: str, general_instructions: str, context: str) -> tuple[str, dict]:

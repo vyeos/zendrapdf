@@ -88,6 +88,14 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
+export const pdfStatusEnum = pgEnum("pdf_status", [
+  "draft",
+  "queued",
+  "processing",
+  "completed",
+  "failed",
+]);
+
 export const pdf = pgTable("pdf", {
   id: text("id").primaryKey().notNull(), // Unique PDF ID
   userId: text("user_id")
@@ -95,6 +103,8 @@ export const pdf = pgTable("pdf", {
     .references(() => user.id, { onDelete: "cascade" }), // FK to user
   fileName: text("file_name").notNull().default("Untitled"), // Name of the PDF file
   htmlContent: text("html_content").notNull(), // HTML content string
+  status: pdfStatusEnum("status").default("draft").notNull(),
+  errorMessage: text("error_message"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -119,6 +129,7 @@ export const credit_history = pgTable("credit_history", {
 
 export const schema = {
   planEnum,
+  pdfStatusEnum,
   user,
   pdf,
   verification,

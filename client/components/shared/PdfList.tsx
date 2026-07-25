@@ -22,7 +22,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { FileText, Trash2, Plus, Clock } from "lucide-react";
+import { FileText, Trash2, Plus, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,14 +46,15 @@ const PdfList: React.FC<PdfListProps> = ({
   const router = useRouter();
 
   const handlePdfClick = (pdf: Pdf) => {
-    const TWO_MINS = 2 * 60 * 1000;
-    const now = Date.now();
-    const createdTime = new Date(pdf.createdAt).getTime();
-    if (pdf.htmlContent === "" && createdTime - now < TWO_MINS) {
-      toast.info("PDF is being created");
-    } else {
-      router.push(`/edit/${pdf.id}`);
+    if (pdf.status === "processing" || pdf.status === "queued") {
+      toast.info("PDF generation is currently processing in the background.");
+      return;
     }
+    if (pdf.status === "failed") {
+      toast.error(`Generation failed: ${pdf.errorMessage || "Unknown error"}`);
+      return;
+    }
+    router.push(`/edit/${pdf.id}`);
   };
 
   if (loading)
@@ -116,22 +117,40 @@ const PdfList: React.FC<PdfListProps> = ({
                 <CardContent className="p-4 h-full flex flex-col justify-between">
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors shrink-0">
-                      <FileText className="w-5 h-5" />
+                      {pdf.status === "processing" || pdf.status === "queued" ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+                      ) : pdf.status === "failed" ? (
+                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                      ) : (
+                        <FileText className="w-5 h-5" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
-                      <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                        {pdf.fileName}
-                      </h3>
+                      <div className="flex items-center gap-2 justify-between">
+                        <h3 className="font-semibold text-sm text-foreground line-clamp-1 leading-tight group-hover:text-primary transition-colors">
+                          {pdf.fileName}
+                        </h3>
+                        {pdf.status === "processing" || pdf.status === "queued" ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
+                            Processing
+                          </span>
+                        ) : pdf.status === "failed" ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                            Failed
+                          </span>
+                        ) : null}
+                      </div>
+
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>
-                        {pdf.createdAt
-                          ? formatDistanceToNow(new Date(pdf.createdAt), {
-                            addSuffix: true,
-                          })
-                          : "Just now"}
-                      </span>
-                    </div>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>
+                          {pdf.createdAt
+                            ? formatDistanceToNow(new Date(pdf.createdAt), {
+                                addSuffix: true,
+                              })
+                            : "Just now"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -177,8 +196,6 @@ const PdfList: React.FC<PdfListProps> = ({
                       </div>
                     )}
                   </div>
-
-                    
                 </CardContent>
               </Card>
             </motion.div>

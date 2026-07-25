@@ -3,10 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { pdfKeys } from "@/lib/queryKeys";
 
-interface PdfListItem {
+export interface PdfListItem {
   id: string;
   fileName: string;
   createdAt: string | null;
+  status?: string;
+  errorMessage?: string | null;
+  htmlContent?: string | null;
 }
 
 export function usePdf(initialLimit: number = 8) {
@@ -24,7 +27,14 @@ export function usePdf(initialLimit: number = 8) {
       if (!res.ok) throw new Error("Failed to fetch PDFs");
       return res.json();
     },
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000,
+    refetchInterval: (query) => {
+      // Auto refetch every 3 seconds if any PDF is currently processing/queued
+      const hasActiveJobs = query.state.data?.some(
+        (p) => p.status === "processing" || p.status === "queued",
+      );
+      return hasActiveJobs ? 3000 : false;
+    },
   });
 
   const deleteMutation = useMutation({

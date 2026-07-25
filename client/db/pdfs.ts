@@ -1,12 +1,15 @@
 import { db } from "./client";
 import { pdf } from "./schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ne, or } from "drizzle-orm";
+
+export type PdfStatus = "draft" | "queued" | "processing" | "completed" | "failed";
 
 export const createPdf = async (
   id: string,
   userId: string,
   fileName: string,
   html_content: string,
+  status: PdfStatus = "draft",
 ) => {
   try {
     const [newPdf] = await db
@@ -16,6 +19,7 @@ export const createPdf = async (
         userId,
         fileName,
         htmlContent: html_content,
+        status,
       })
       .returning();
     return newPdf;
@@ -29,13 +33,17 @@ export const updatePdf = async (
   userId: string,
   filename: string,
   htmlContent?: string,
+  status?: PdfStatus,
+  errorMessage?: string,
 ) => {
   try {
     const [updatedPdf] = await db
       .update(pdf)
       .set({
         fileName: filename,
-        htmlContent: htmlContent ?? "",
+        ...(htmlContent !== undefined && { htmlContent }),
+        ...(status !== undefined && { status }),
+        ...(errorMessage !== undefined && { errorMessage }),
       })
       .where(and(eq(pdf.id, id), eq(pdf.userId, userId)))
       .returning({
@@ -43,11 +51,36 @@ export const updatePdf = async (
         fileName: pdf.fileName,
         createdAt: pdf.createdAt,
         htmlContent: pdf.htmlContent,
+        status: pdf.status,
+        errorMessage: pdf.errorMessage,
       });
 
     return updatedPdf;
   } catch (err) {
     throw new Error(`Failed to update PDF: ${(err as Error).message}`);
+  }
+};
+
+export const updatePdfStatus = async (
+  id: string,
+  status: PdfStatus,
+  htmlContent?: string,
+  errorMessage?: string,
+) => {
+  try {
+    const [updatedPdf] = await db
+      .update(pdf)
+      .set({
+        status,
+        ...(htmlContent !== undefined && { htmlContent }),
+        ...(errorMessage !== undefined && { errorMessage }),
+      })
+      .where(eq(pdf.id, id))
+      .returning();
+
+    return updatedPdf;
+  } catch (err) {
+    throw new Error(`Failed to update PDF status: ${(err as Error).message}`);
   }
 };
 
@@ -58,9 +91,17 @@ export const getAllPdfs = async (userId: string) => {
         id: pdf.id,
         fileName: pdf.fileName,
         createdAt: pdf.createdAt,
+        status: pdf.status,
+        errorMessage: pdf.errorMessage,
+        htmlContent: pdf.htmlContent,
       })
       .from(pdf)
-      .where(eq(pdf.userId, userId))
+      .where(
+        and(
+          eq(pdf.userId, userId),
+          ne(pdf.status, "draft"),
+        ),
+      )
       .orderBy(desc(pdf.createdAt));
   } catch (err) {
     throw new Error(`Failed to get pdfs: ${err}`);
