@@ -109,23 +109,7 @@ const Generate = () => {
         className="w-full lg:w-3/5 border-b lg:border-b-0 lg:border-r border-border/60 bg-card/40 backdrop-blur-md flex flex-col min-h-0 lg:h-full overflow-y-auto"
       >
         <div className="flex-1 p-5 sm:p-7 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-border/40">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
-                Document Studio
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Generate clean, print-ready PDF documents from text descriptions.
-              </p>
-            </div>
-            <Badge
-              variant="outline"
-              className="hidden sm:flex px-3 py-1 bg-primary/5 border-primary/20 text-primary font-medium text-xs rounded-full"
-            >
-              {user?.creditsLeft ?? 0} Credits Available
-            </Badge>
-          </div>
+
 
           {/* Document Title */}
           <div className="space-y-2">
