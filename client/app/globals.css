@@ -390,3 +390,28 @@
     }
   }
 }
+
+/* Custom Scrollbar matching theme tokens */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(from var(--muted-foreground) l c h / 0.25);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(from var(--primary) l c h / 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(from var(--muted-foreground) l c h / 0.25) transparent;
+}

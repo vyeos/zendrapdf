@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { toast } from "sonner";
-import { LoaderCircle, Upload, X } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,7 @@ export default function UploadFiles() {
   } = useEditorStore();
 
   const [loading, setLoading] = useState(false);
-  const [, setDragActive] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [limitFilesModalOpen, setLimitFilesModalOpen] = useState(false);
 
@@ -87,7 +88,7 @@ export default function UploadFiles() {
       if (!res.ok) throw new Error("Upload failed");
 
       setContextFiles([...contextFiles, newFile.name]);
-      toast.success(`${newFile.name} uploaded`);
+      toast.success(`${newFile.name} attached as context!`);
     } catch (err) {
       console.error("Upload error:", err);
       toast.error("Upload failed");
@@ -134,24 +135,24 @@ export default function UploadFiles() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <label className="text-sm font-medium">Reference Files</label>
-        <span className="text-xs text-muted-foreground">
-          {contextFiles.length} uploaded
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-xs sm:text-sm font-semibold text-foreground">
+          Reference Documents (RAG Context)
+        </label>
+        <span className="text-[11px] text-muted-foreground font-medium bg-muted/40 px-2 py-0.5 rounded-full">
+          {contextFiles.length} / 5 uploaded
         </span>
       </div>
 
-      <div className={`flex flex-col sm:flex-row gap-4 transition-all`}>
-        {/* Upload Area */}
-        <div
-          className={`flex-1 ${contextFiles.length > 0 ? "sm:w-1/2" : "w-full"}`}
-        >
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Upload Zone */}
+        <div className={`flex-1 ${contextFiles.length > 0 ? "sm:w-1/2" : "w-full"}`}>
           <div
-            className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center cursor-pointer transition-all duration-200
-                        min-h-[140px] sm:min-h-[180px] flex flex-col items-center justify-center
-                        hover:border-primary hover:bg-primary/5 hover:scale-[1.02] border-border
-                        ${loading ? "opacity-50 cursor-wait" : ""}
+            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-200
+                        min-h-[110px] flex flex-col items-center justify-center relative overflow-hidden group
+                        ${dragActive ? "border-primary bg-primary/10 scale-[1.01]" : "border-border/80 hover:border-primary/60 hover:bg-primary/5 bg-background/50"}
+                        ${loading ? "opacity-60 cursor-wait" : ""}
             `}
             onDragOver={(e) => {
               if (!loading) {
@@ -167,14 +168,11 @@ export default function UploadFiles() {
               if (!loading) document.getElementById("fileInput")?.click();
             }}
           >
-            <Upload
-              className={`mx-auto mb-2 text-primary transition-transform ${
-                loading ? "animate-bounce" : "group-hover:scale-110"
-              }`}
-              size={28}
-            />
-            <p className="text-sm text-primary max-w-[80%] sm:max-w-none mx-auto">
-              {loading ? "Uploading..." : "Drop files here or tap to browse"}
+            <p className="text-xs font-semibold text-primary">
+              {loading ? "Indexing Vector Embeddings..." : "Drop PDF here or click to browse"}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Supports PDF up to 5MB
             </p>
             <input
               disabled={loading}
@@ -191,30 +189,37 @@ export default function UploadFiles() {
 
         {/* Files List */}
         {contextFiles.length > 0 && (
-          <div className="sm:w-1/2 flex flex-col">
-            <h4 className="text-sm font-medium mb-2">Uploaded Files:</h4>
-            <div className="flex-1 max-h-[150px] overflow-y-auto pr-1 space-y-1">
-              {contextFiles.map((fileName, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-2 rounded-md bg-muted/30 text-sm gap-2"
-                >
-                  <span className="flex items-center gap-2 truncate">
-                    📄 <span className="truncate">{fileName}</span>
-                  </span>
-                  <button
-                    onClick={() => removeFile(fileName)}
-                    className="text-destructive hover:bg-destructive/10 p-1 rounded transition"
-                    disabled={isRemoving}
+          <div className="sm:w-1/2 flex flex-col justify-start">
+            <div className="text-xs font-medium text-muted-foreground mb-1.5">
+              Attached Knowledge Base
+            </div>
+            <div className="max-h-[130px] overflow-y-auto pr-1 space-y-1.5">
+              <AnimatePresence>
+                {contextFiles.map((fName, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="flex items-center justify-between p-2 rounded-lg bg-card border border-border/60 text-xs shadow-2xs gap-2"
                   >
-                    {isRemoving ? (
-                      <LoaderCircle size={14} className="animate-spin" />
-                    ) : (
-                      <X className="h-4 w-4 cursor-pointer" />
-                    )}
-                  </button>
-                </div>
-              ))}
+                    <span className="truncate text-foreground font-medium">
+                      {fName}
+                    </span>
+                    <button
+                      onClick={() => removeFile(fName)}
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-1.5 py-0.5 rounded-md transition text-[11px]"
+                      disabled={isRemoving}
+                    >
+                      {isRemoving ? (
+                        <LoaderCircle size={12} className="animate-spin" />
+                      ) : (
+                        "Remove"
+                      )}
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         )}
@@ -227,17 +232,17 @@ export default function UploadFiles() {
       >
         <AlertDialogContent className="w-[92%] sm:w-[480px] rounded-2xl">
           <AlertDialogHeader className="space-y-2">
-            <AlertDialogTitle className="text-center">
-              File Upload Limit Reached
+            <AlertDialogTitle className="text-center text-base font-semibold">
+              Context File Limit Reached
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              You can upload 5 files per document. Upgrade to Creator for more.
+            <AlertDialogDescription className="text-center text-xs text-muted-foreground">
+              You can upload up to 5 reference files per document. Upgrade your plan for higher file limits.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
-            <AlertDialogCancel>Close</AlertDialogCancel>
+            <AlertDialogCancel className="text-xs">Close</AlertDialogCancel>
             <Link href="/pricing" className="w-full sm:w-auto">
-              <AlertDialogAction className="w-full">
+              <AlertDialogAction className="w-full text-xs">
                 View Pricing
               </AlertDialogAction>
             </Link>

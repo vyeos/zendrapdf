@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import UploadFiles from "@/components/generatePage/UploadFiles";
 import AIWorking from "@/components/generatePage/AIWorking";
 import {
@@ -17,7 +18,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "../ui/badge";
-import { Coins } from "lucide-react";
 import { Button } from "../ui/button";
 import { useGeneratePdf } from "@/hooks/mutations/useGeneratePdf";
 import { useEditorStore } from "@/store/useEditorStore";
@@ -100,58 +100,89 @@ const Generate = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
-      {/* Left Panel - Main Input Area */}
-      <div className="w-full lg:w-3/5 border-b lg:border-b-0 lg:border-r border-border bg-card flex flex-col min-h-0 lg:h-full overflow-y-auto">
-        <div className="flex-1 p-4 space-y-4 sm:space-y-6">
-          {/* Document Name Input */}
-          <div>
-            <div className="px-1.5 sm:px-2 text-sm font-medium text-muted-foreground mb-1.5">
-              Document Name
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden bg-background">
+      {/* Left Panel - Main Creation Studio */}
+      <motion.div
+        initial={{ opacity: 0, x: -15 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="w-full lg:w-3/5 border-b lg:border-b-0 lg:border-r border-border/60 bg-card/40 backdrop-blur-md flex flex-col min-h-0 lg:h-full overflow-y-auto"
+      >
+        <div className="flex-1 p-5 sm:p-7 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-border/40">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+                Document Studio
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Generate clean, print-ready PDF documents from text descriptions.
+              </p>
             </div>
+            <Badge
+              variant="outline"
+              className="hidden sm:flex px-3 py-1 bg-primary/5 border-primary/20 text-primary font-medium text-xs rounded-full"
+            >
+              {user?.creditsLeft ?? 0} Credits Available
+            </Badge>
+          </div>
+
+          {/* Document Title */}
+          <div className="space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-foreground flex items-center justify-between">
+              <span>Document Title</span>
+              <span className="text-[11px] text-muted-foreground font-normal">
+                Appears on document header
+              </span>
+            </label>
             <input
               type="text"
               value={fileName || ""}
               onChange={(e) => updateFileName(e.target.value)}
-              placeholder="e.g., Q3 Marketing Report"
-              className="w-full rounded-md border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              placeholder="e.g., Q3 Technical Architecture Whitepaper"
+              className="w-full rounded-xl border border-border bg-background/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-all"
             />
           </div>
 
-          {/* Document Description */}
-          <div className="flex flex-col">
-            <div className="px-1.5 sm:px-2 text-sm font-medium text-muted-foreground mb-1.5 flex justify-between">
-              <span>Describe your document</span>
+          {/* Prompt Description */}
+          <div className="space-y-2 flex flex-col">
+            <div className="flex items-center justify-between">
+              <label className="text-xs sm:text-sm font-semibold text-foreground">
+                Describe Your Content & Layout
+              </label>
               {templateParam && (
-                <span
-                  className="text-xs text-primary cursor-pointer hover:underline"
-                  onClick={() => setInput("")}
+                <button
+                  onClick={() => {
+                    setInput("");
+                    router.replace("/generate");
+                  }}
+                  className="text-xs text-primary hover:underline font-medium"
                 >
                   Clear Template
-                </span>
+                </button>
               )}
             </div>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe what you want to create..."
-              className="w-full min-h-[150px] sm:min-h-[200px] lg:flex-1 resize-none rounded-md border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all leading-relaxed"
-            />
+
+            <div className="relative">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Describe the main sections, topic depth, preferred color scheme, table layouts, or bullet points..."
+                className="w-full min-h-[160px] sm:min-h-[210px] resize-none rounded-xl border border-border bg-background/80 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-all leading-relaxed placeholder:text-muted-foreground/60"
+              />
+              <div className="absolute bottom-3 right-3 text-[11px] text-muted-foreground/60">
+                {input.length} characters
+              </div>
+            </div>
           </div>
 
-          {/* Token Display & Button - Always visible */}
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <Badge
-                variant="secondary"
-                className="text-xs font-normal px-3 py-1"
-              >
-                <Coins className="h-3.5 w-3.5 mr-1.5 text-secondary-foreground" />
-                {user?.creditsLeft ?? 0} credits available
-              </Badge>
+          {/* Action CTA & Credits */}
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <span>Cost: 4 credits per generation</span>
               <Link
                 href="/pricing"
-                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                className="font-medium text-primary hover:underline transition-all"
               >
                 Upgrade Plan
               </Link>
@@ -160,82 +191,88 @@ const Generate = () => {
             <Button
               onClick={handleSend}
               disabled={isPending || !input.trim()}
-              className="w-full py-5 sm:py-6 text-sm sm:text-base shadow-sm"
+              className="w-full py-6 text-sm sm:text-base font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200"
               size="lg"
             >
               Generate Document
             </Button>
           </div>
 
-          {/* File Upload Section - Moved inside main content for mobile */}
-          <div className="border-t border-border/50 pt-4">
+          {/* Context File Attachment Area */}
+          <div className="border-t border-border/50 pt-5">
             <UploadFiles />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Right Panel - Tips & Templates */}
-      <div className="w-full lg:w-2/5 flex flex-col p-4 sm:p-6 space-y-6 sm:space-y-8 bg-muted/10 overflow-y-auto min-h-0 lg:h-full">
-        {/* Tips */}
-        <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 rounded-xl bg-card border border-border/50 shadow-sm">
-          <h4 className="font-semibold text-sm">PRO Tips</h4>
-          <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary text-lg leading-none">•</span>
-              <span>
-                <strong>Context matters:</strong> Uploading a previous PDF
-                allows the AI to mimic your style.
-              </span>
+      {/* Right Panel - Tips & Preset Library */}
+      <motion.div
+        initial={{ opacity: 0, x: 15 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut", delay: 0.05 }}
+        className="w-full lg:w-2/5 flex flex-col p-5 sm:p-7 space-y-6 bg-muted/15 overflow-y-auto min-h-0 lg:h-full"
+      >
+        {/* Tips Panel */}
+        <div className="p-4 rounded-xl bg-card border border-border/60 shadow-xs space-y-3">
+          <h3 className="font-semibold text-sm text-foreground">
+            Tips for Best Results
+          </h3>
+          <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+            <li>
+              <strong className="text-foreground">Reference Context:</strong> Attach an existing PDF to ground generation with custom domain knowledge.
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary text-lg leading-none">•</span>
-              <span>
-                <strong>Be specific:</strong> Mention "Tables", "Bullet points",
-                or specific standard clauses.
-              </span>
+            <li>
+              <strong className="text-foreground">Specific Elements:</strong> Request specific components like tables, bullet points, or standard sections.
             </li>
           </ul>
         </div>
 
-        {/* Available Templates */}
-        <div className="space-y-3 sm:space-y-4">
-          <h4 className="font-medium text-sm px-1">Quick Templates</h4>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        {/* Preset Templates Library */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="font-semibold text-sm text-foreground">
+              Quick Templates
+            </h3>
+            <span className="text-[11px] text-muted-foreground">Select to load</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
             {Object.keys(TEMPLATE_PROMPTS).map((key) => {
               const isActive = templateParam === key;
+              const title = key.replace(/-/g, " ");
               return (
-                <Button
+                <motion.div
                   key={key}
-                  variant={isActive ? "default" : "outline"}
-                  onClick={() => handleTemplateClick(key)}
-                  className={`
-                    justify-start text-xs sm:text-sm h-auto py-2.5 sm:py-3 px-3 sm:px-4
-                    ${isActive ? "border-primary" : "hover:border-primary/50"}
-                  `}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
-                  {key.replace(/-/g, " ")}
-                </Button>
+                  <Button
+                    variant={isActive ? "default" : "outline"}
+                    onClick={() => handleTemplateClick(key)}
+                    className={`
+                      w-full justify-between text-xs sm:text-sm h-auto py-3 px-4 rounded-xl transition-all duration-200 font-medium text-left border-border/80 capitalize
+                      ${isActive ? "bg-primary text-primary-foreground" : "hover:border-primary/50 hover:bg-card/80"}
+                    `}
+                  >
+                    <span>{title}</span>
+                  </Button>
+                </motion.div>
               );
             })}
           </div>
         </div>
-      </div>
+      </motion.div>
 
+      {/* Limit Modal */}
       <AlertDialog open={limitModalOpen} onOpenChange={setLimitModalOpen}>
-        <AlertDialogContent className="bg-linear-to-br from-card to-background border-border w-[92%] sm:w-[480px] rounded-2xl shadow-xl">
+        <AlertDialogContent className="bg-card border-border w-[92%] sm:w-[480px] rounded-2xl shadow-xl">
           <AlertDialogHeader className="space-y-2">
-            <div className="flex items-center justify-center mb-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary text-xl">!</span>
-              </div>
-            </div>
-
             <AlertDialogTitle className="text-center text-lg font-semibold text-foreground">
-              Daily Token Limit Reached
+              Insufficient Credits
             </AlertDialogTitle>
 
             <AlertDialogDescription className="text-center text-sm text-muted-foreground">
-              You've used up your daily credits. Upgrade to Creator for more.
+              You need at least 4 credits to generate a document. Upgrade your plan to get instant access to credits.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -246,7 +283,7 @@ const Generate = () => {
 
             <Link href="/pricing" className="w-full sm:w-auto">
               <AlertDialogAction className="w-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition cursor-pointer">
-                View Pricing
+                View Plans & Pricing
               </AlertDialogAction>
             </Link>
           </AlertDialogFooter>

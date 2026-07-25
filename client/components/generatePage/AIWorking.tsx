@@ -4,21 +4,6 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Eye,
-  EyeOff,
-  CheckCircle,
-  AlertCircle,
-  FileText,
-  Clock,
-  Plus,
-  RotateCcw,
-  File,
-  ArrowDownLeft,
-  Layers,
-  LayoutDashboard,
-  Sparkles
-} from 'lucide-react'
 import LumaSpin from '../21st/LumaSpin'
 import Link from 'next/link'
 
@@ -34,16 +19,6 @@ const AIWorking: React.FC<AIWorkingProps> = ({
   status = 'working',
 }) => {
   const [showPrompt, setShowPrompt] = useState(false)
-
-  const getStatusIcon = () => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="w-6 h-6 text-primary" />
-      case 'error':
-        return <AlertCircle className="w-6 h-6 text-destructive" />
-      default:
-    }
-  }
 
   const getStatusText = () => {
     switch (status) {
@@ -85,13 +60,7 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                 transition={{ delay: 0.1 }}
                 className="flex items-center justify-center mb-4"
               >
-                {status !== 'working' ? (
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      {getStatusIcon()}
-                    </div>
-                  </div>
-                ) : (
+                {status === 'working' && (
                   <div className="flex items-center justify-center my-2">
                     <LumaSpin />
                   </div>
@@ -120,7 +89,6 @@ const AIWorking: React.FC<AIWorkingProps> = ({
               >
                 <div className="flex items-center gap-2.5 text-foreground font-medium">
                   <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                  <Sparkles className="w-4 h-4 text-emerald-500" />
                   <span>Enqueued to Background Job Worker</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-muted-foreground">
@@ -148,17 +116,7 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                   onClick={() => setShowPrompt(!showPrompt)}
                   className="w-full text-xs"
                 >
-                  {showPrompt ? (
-                    <>
-                      <EyeOff className="w-3.5 h-3.5 mr-1.5" />
-                      Hide Prompt
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3.5 h-3.5 mr-1.5" />
-                      View Prompt
-                    </>
-                  )}
+                  {showPrompt ? "Hide Prompt" : "View Prompt"}
                 </Button>
               </motion.div>
             )}
@@ -175,10 +133,7 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                 >
                   <Card className="bg-muted/30 border-border">
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-semibold">Your Prompt</span>
-                      </div>
+                      <div className="text-xs font-semibold mb-2">Your Prompt</div>
                       <div className="text-xs text-muted-foreground whitespace-pre-wrap max-h-24 overflow-y-auto">
                         {prompt}
                       </div>
@@ -196,24 +151,20 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                 </div>
                 <div className="flex justify-center">
                   <Link href="/dashboard">
-                    <Button variant="secondary" className="gap-2 text-xs">
-                      <LayoutDashboard className="w-4 h-4" />
+                    <Button variant="secondary" className="text-xs">
                       Go to Dashboard & View Progress
                     </Button>
                   </Link>
                 </div>
                 <div className="flex items-center justify-center gap-3 pt-2">
-                  <Link href="/pdf-to-word" className="hover:scale-105 transition-transform flex gap-1.5 items-center text-blue-600 dark:text-blue-400 bg-background px-3 py-1.5 rounded-lg border border-border text-xs">
-                    <File className="h-4 w-4" />
-                    <span>PDF to Word</span>
+                  <Link href="/pdf-to-word" className="hover:underline text-blue-600 dark:text-blue-400 text-xs">
+                    PDF to Word
                   </Link>
-                  <Link href="/compress-pdf" className="hover:scale-105 transition-transform flex gap-1.5 items-center text-red-600 dark:text-red-400 bg-background px-3 py-1.5 rounded-lg border border-border text-xs">
-                    <ArrowDownLeft className="h-4 w-4" />
-                    <span>Compress</span>
+                  <Link href="/compress-pdf" className="hover:underline text-red-600 dark:text-red-400 text-xs">
+                    Compress
                   </Link>
-                  <Link href="/merge-pdf" className="hover:scale-105 transition-transform flex gap-1.5 items-center text-purple-600 dark:text-purple-400 bg-background px-3 py-1.5 rounded-lg border border-border text-xs">
-                    <Layers className="h-4 w-4" />
-                    <span>Merge</span>
+                  <Link href="/merge-pdf" className="hover:underline text-purple-600 dark:text-purple-400 text-xs">
+                    Merge
                   </Link>
                 </div>
               </div>
@@ -231,7 +182,6 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                   className="flex-1"
                   onClick={() => window.location.reload()}
                 >
-                  <Plus className="w-4 h-4 mr-1.5" />
                   Generate Another
                 </Button>
               )}
@@ -242,7 +192,7 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                   onClick={() => window.location.reload()}
                   className="flex-1"
                 >
-                  <RotateCcw className="w-4 h-4 mr-1.5" /> Try Again
+                  Try Again
                 </Button>
               )}
             </motion.div>
@@ -254,16 +204,13 @@ const AIWorking: React.FC<AIWorkingProps> = ({
               transition={{ delay: 0.7 }}
               className="mt-4 text-center"
             >
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
-                <span>
-                  {status === 'working'
-                    ? 'Your PDF will open automatically when ready'
-                    : status === 'success'
-                      ? 'Ready to edit'
-                      : 'Please try again or check your credits'
-                  }
-                </span>
+              <div className="text-xs text-muted-foreground">
+                {status === 'working'
+                  ? 'Your PDF will open automatically when ready'
+                  : status === 'success'
+                    ? 'Ready to edit'
+                    : 'Please try again or check your credits'
+                }
               </div>
             </motion.div>
           </CardContent>
