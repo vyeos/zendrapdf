@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { toast } from "sonner";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Upload } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -168,6 +168,12 @@ export default function UploadFiles() {
               if (!loading) document.getElementById("fileInput")?.click();
             }}
           >
+            <Upload
+              className={`mx-auto mb-2 text-primary transition-transform duration-300 ${
+                loading ? "animate-bounce" : "group-hover:scale-110"
+              }`}
+              size={24}
+            />
             <p className="text-xs font-semibold text-primary">
               {loading ? "Indexing Vector Embeddings..." : "Drop PDF here or click to browse"}
             </p>
