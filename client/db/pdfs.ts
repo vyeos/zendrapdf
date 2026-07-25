@@ -1,8 +1,25 @@
 import { db } from "./client";
 import { pdf } from "./schema";
-import { eq, and, desc, ne, or } from "drizzle-orm";
+import { eq, and, desc, ne, lt } from "drizzle-orm";
 
 export type PdfStatus = "draft" | "queued" | "processing" | "completed" | "failed";
+
+export const deleteStaleDrafts = async (userId: string) => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    await db
+      .delete(pdf)
+      .where(
+        and(
+          eq(pdf.userId, userId),
+          eq(pdf.status, "draft"),
+          lt(pdf.createdAt, oneHourAgo),
+        ),
+      );
+  } catch (err) {
+    console.error("Error pruning stale drafts:", err);
+  }
+};
 
 export const createPdf = async (
   id: string,
@@ -86,6 +103,9 @@ export const updatePdfStatus = async (
 
 export const getAllPdfs = async (userId: string) => {
   try {
+    // Prune stale un-generated draft rows asynchronously
+    deleteStaleDrafts(userId).catch(() => {});
+
     return await db
       .select({
         id: pdf.id,
@@ -100,6 +120,7 @@ export const getAllPdfs = async (userId: string) => {
         and(
           eq(pdf.userId, userId),
           ne(pdf.status, "draft"),
+          ne(pdf.htmlContent, ""),
         ),
       )
       .orderBy(desc(pdf.createdAt));
