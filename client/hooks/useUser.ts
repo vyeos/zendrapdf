@@ -17,7 +17,7 @@ export default function useUser() {
     queryFn: async () => {
       // Fetch user details in parallel
       const [creditHistoryRes, detailsRes] = await Promise.all([
-        fetch("/api/getCreditHistory"),
+        fetch("/api/getCreditHistory", { cache: "no-store" }),
         fetch("/api/getUserDetails", { cache: "no-store" }),
       ]);
 
@@ -40,8 +40,8 @@ export default function useUser() {
     },
     // Only run when we have a session
     enabled: !!session?.user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Combine session data with user details

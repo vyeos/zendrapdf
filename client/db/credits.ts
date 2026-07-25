@@ -16,6 +16,17 @@ const HISTORY_REASONS: Record<string, string> = {
   "-1": "Refund: Edit Failed",
 };
 
+/**
+ * Safely format creditsResetAt into a standard YYYY-MM-DD UTC string.
+ */
+function getFormattedResetDate(resetAt: string | Date | null | undefined): string {
+  if (!resetAt) return "";
+  if (resetAt instanceof Date) {
+    return formatInTimeZone(resetAt, "UTC", "yyyy-MM-dd");
+  }
+  return String(resetAt).slice(0, 10);
+}
+
 export const deduceCredits = async (userId: string, cost: number) => {
   try {
     return await db.transaction(async (tx) => {
@@ -35,12 +46,13 @@ export const deduceCredits = async (userId: string, cost: number) => {
         throw new Error(`User not found with id: ${userId}`);
       }
 
-      // Check daily allowance inside the locked transaction
       const todayUTC = formatInTimeZone(new Date(), "UTC", "yyyy-MM-dd");
+      const userResetDate = getFormattedResetDate(lockedUser.creditsResetAt);
+
       let currentCredits = lockedUser.creditsLeft;
 
-      if (lockedUser.creditsResetAt < todayUTC) {
-        // Reset credits
+      // Only reset daily credits if user's last reset date is strictly in the past
+      if (userResetDate !== "" && userResetDate < todayUTC) {
         currentCredits = DAILY_ALLOWANCE[lockedUser.plan] ?? DAILY_ALLOWANCE.free;
         await tx
           .update(user)
@@ -48,7 +60,7 @@ export const deduceCredits = async (userId: string, cost: number) => {
           .where(eq(user.id, userId));
       }
 
-      // Now check and deduct credits atomically
+      // Check and deduct credits atomically
       const [updatedUser] = await tx
         .update(user)
         .set({
@@ -75,7 +87,6 @@ export const deduceCredits = async (userId: string, cost: number) => {
       return updatedUser.creditsLeft;
     });
   } catch (err) {
-    // Pass the error up so the API route can handle it (e.g. return 402)
     throw new Error(
       err instanceof Error ? err.message : "Credit deduction failed",
     );
@@ -112,8 +123,10 @@ export const ensureDailyAllowance = async (userId: string) => {
     }
 
     const todayUTC = formatInTimeZone(new Date(), "UTC", "yyyy-MM-dd");
+    const userResetDate = getFormattedResetDate(userCheck.creditsResetAt);
 
-    if (userCheck.creditsResetAt >= todayUTC) {
+    // If credits were already reset today or resetAt is in the future, return current balance directly
+    if (userResetDate !== "" && userResetDate >= todayUTC) {
       return userCheck.creditsLeft;
     }
 
@@ -126,7 +139,9 @@ export const ensureDailyAllowance = async (userId: string) => {
 
       if (!currentUser) return 0;
 
-      if (currentUser.creditsResetAt < todayUTC) {
+      const currentResetDate = getFormattedResetDate(currentUser.creditsResetAt);
+
+      if (currentResetDate === "" || currentResetDate < todayUTC) {
         const newCredits =
           DAILY_ALLOWANCE[currentUser.plan] ?? DAILY_ALLOWANCE.free;
 

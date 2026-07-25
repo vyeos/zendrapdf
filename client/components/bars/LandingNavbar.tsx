@@ -123,7 +123,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4">
+      <header suppressHydrationWarning className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4">
         <div
           className={cn(
             "flex items-center justify-between w-full md:max-w-6xl rounded-2xl px-4 py-3 transition-all duration-300",

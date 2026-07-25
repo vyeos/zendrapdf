@@ -58,9 +58,9 @@ export function useGeneratePdf() {
 
       const queueRes = await res.json();
 
-      // Update user credits immediately from response
+      // Update user credits immediately from response in query cache
       if (queueRes.creditsLeft !== undefined) {
-        queryClient.setQueryData(userKeys.profile(), (oldUser: { creditsLeft?: number } | undefined) => {
+        queryClient.setQueryData(userKeys.profile(), (oldUser: Record<string, unknown> | undefined) => {
           if (!oldUser) return oldUser;
           return {
             ...oldUser,
@@ -79,6 +79,7 @@ export function useGeneratePdf() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: pdfKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
 
       const hasContext = !!variables.pdfId;
 
@@ -93,10 +94,14 @@ export function useGeneratePdf() {
       router.push(`/edit/${data.pdfId}`);
     },
     onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       if (error.message !== "DAILY TOKEN LIMIT REACHED") {
         console.error(error);
         toast.error(error.message || "Failed to generate PDF");
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
 }
