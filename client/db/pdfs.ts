@@ -120,7 +120,6 @@ export const getAllPdfs = async (userId: string) => {
         and(
           eq(pdf.userId, userId),
           ne(pdf.status, "draft"),
-          ne(pdf.htmlContent, ""),
         ),
       )
       .orderBy(desc(pdf.createdAt));
