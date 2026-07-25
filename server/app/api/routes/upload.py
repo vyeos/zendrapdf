@@ -2,6 +2,7 @@ import os
 import re
 import tempfile
 import logging
+import asyncio
 from fastapi import APIRouter, UploadFile, File, Form, Header
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
@@ -41,8 +42,8 @@ async def upload_context(
         tmp_file.write(contents)
         tmp_file.close()
 
-        # Process + index
-        process_and_index_pdf(tmp_path, filename, pdfId, userId)
+        # Process + index offloaded to thread pool to keep FastAPI responsive
+        await asyncio.to_thread(process_and_index_pdf, tmp_path, filename, pdfId, userId)
 
         return JSONResponse(content={"message": "Context PDF uploaded successfully"})
 
@@ -59,32 +60,38 @@ async def upload_context(
 
 
 def process_and_index_pdf(tmp_path: str, filename: str, pdfId: str, userId: str):
-
     try:
-        logger.info(f"Processing PDF {pdfId}")
+        logger.info(f"Processing PDF {pdfId} - {filename}")
 
+        # Extract markdown fast from PDF
         md_text = pymupdf4llm.to_markdown(tmp_path)
-
-        
         md_text = clean_markdown(md_text)
 
+        if not md_text.strip():
+            logger.warning(f"No extractable text found in {filename}")
+            return
+
+        # Delete ONLY existing vectors for THIS specific filename (preserves other context files!)
         try:
-            index = PineconeVectorStore.from_existing_index(
+            vector_store = PineconeVectorStore.from_existing_index(
                 INDEX_NAME, embedding=cfEmbeddings
             )
-            index.delete(filter={"pdfId": pdfId, "userId": userId})
-        except Exception:
-            pass  # (first upload case)
+            vector_store.delete(filter={
+                "pdfId": pdfId,
+                "userId": userId,
+                "filename": filename
+            })
+        except Exception as delete_err:
+            logger.debug(f"First upload or deletion skipped for {filename}: {delete_err}")
 
-        # smart chunking
+        # Smart larger chunking to reduce embedding API calls from ~100 to ~20
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=600,
-            chunk_overlap=80,
-            separators=["\n## ", "\n### ", "\n", " ", ""]
+            chunk_size=1200,
+            chunk_overlap=150,
+            separators=["\n## ", "\n### ", "\n\n", "\n", " ", ""]
         )
 
         docs = splitter.create_documents([md_text])
-
 
         for i, doc in enumerate(docs):
             doc.metadata = {
@@ -94,20 +101,22 @@ def process_and_index_pdf(tmp_path: str, filename: str, pdfId: str, userId: str)
                 "chunkId": i,
             }
 
+        # Batch upsert with batch_size=32 for high throughput
         PineconeVectorStore.from_documents(
             documents=docs,
             embedding=cfEmbeddings,
-            index_name=INDEX_NAME
+            index_name=INDEX_NAME,
+            batch_size=32
         )
 
-        logger.info(f"Successfully indexed PDF {pdfId}")
+        logger.info(f"Successfully indexed {len(docs)} chunks for PDF {pdfId} ({filename})")
 
     except Exception as e:
         logger.error(f"PDF processing failed {pdfId}: {str(e)}", exc_info=True)
         raise e
 
-def clean_markdown(md: str) -> str:
 
+def clean_markdown(md: str) -> str:
     md = md.replace("\x00", "")
 
     # Remove common page headers/footers

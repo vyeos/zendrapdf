@@ -4,11 +4,11 @@ import logging
 logger = logging.getLogger(__name__)
 from langchain_pinecone import PineconeVectorStore
 from pydantic import BaseModel
-from app.config import index, cfEmbeddings, INDEX_NAME
+from app.config import index, cfEmbeddings
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
-import os
 secret = os.getenv("secret")
 
 vector_store = PineconeVectorStore(
@@ -28,12 +28,12 @@ class RemoveRequest(BaseModel):
 
 @router.post('/remove')
 async def remove(req: RemoveRequest, secret1: str = Header(...)):
-    # if secret1 != secret:
-    #     raise JSONResponse(status_code=401, detail="Unauthorized")
-
     try:
-        query = f"filename:{req.filename} AND pdfId:{req.pdfId} AND userId:{req.userId}"
-        vector_store.delete(query)
+        vector_store.delete(filter={
+            "filename": req.filename,
+            "pdfId": req.pdfId,
+            "userId": req.userId
+        })
         return {"message": "Context removed successfully"}
     except Exception as e:    
         logger.error(
