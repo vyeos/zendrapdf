@@ -60,13 +60,17 @@ export const deduceCredits = async (userId: string, cost: number) => {
           .where(eq(user.id, userId));
       }
 
-      // Check and deduct credits atomically
+      // Check and deduct/refund credits atomically
+      const whereCondition = cost > 0
+        ? sql`${user.id} = ${userId} AND ${user.creditsLeft} >= ${cost}`
+        : eq(user.id, userId);
+
       const [updatedUser] = await tx
         .update(user)
         .set({
           creditsLeft: sql`${user.creditsLeft} - ${cost}`,
         })
-        .where(sql`${user.id} = ${userId} AND ${user.creditsLeft} >= ${cost}`)
+        .where(whereCondition)
         .returning({ creditsLeft: user.creditsLeft });
 
       if (!updatedUser) {
