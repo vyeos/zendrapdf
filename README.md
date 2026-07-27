@@ -1,4 +1,4 @@
-# PDFLens - Documentation
+# Zendra PDF - Documentation
 
 This document serves as the internal guide for the AI PDF Generator application.
 
