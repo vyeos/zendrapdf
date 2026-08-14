@@ -9,37 +9,37 @@ export default function Features4() {
       title: "Word to PDF",
       icon: FileText,
       description: "Convert DOCX files into formatted PDFs instantly.",
-      color: "text-blue-500",
+      color: "text-primary",
     },
     {
       title: "PDF to Word",
       icon: FileType,
       description: "Extract editable content from any PDF.",
-      color: "text-blue-300",
+      color: "text-primary",
     },
     {
       title: "PDF to Markdown",
       icon: FileDown,
       description: "Turn PDFs into clean Markdown files.",
-      color: "text-green-500",
+      color: "text-primary",
     },
     {
       title: "Merge PDFs",
       icon: Combine,
       description: "Combine multiple documents into one seamless PDF.",
-      color: "text-purple-500",
+      color: "text-primary",
     },
     {
       title: "Split PDFs",
       icon: Split,
       description: "Extract pages or split a PDF into multiple files.",
-      color: "text-orange-300",
+      color: "text-primary",
     },
     {
       title: "PPT to PDF",
       icon: FileSpreadsheet,
       description: "Convert presentations into print-ready PDFs.",
-      color: "text-orange-500",
+      color: "text-primary",
     },
   ]
   return (

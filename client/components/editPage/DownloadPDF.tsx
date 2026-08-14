@@ -83,7 +83,7 @@ const DownloadPDF = () => {
       size="lg"
       onClick={handleDownload}
       disabled={loading}
-      className="gap-2 hover:scale-105 cursor-pointer transition-transform"
+      className="gap-2 cursor-pointer"
     >
       {loading ? (
         <Loader2 className="w-4 h-4 animate-spin" />

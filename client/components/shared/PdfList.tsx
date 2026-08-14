@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,12 +22,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { FileText, Trash2, Plus, Clock, Loader2, AlertTriangle } from "lucide-react";
+import { FileText, Trash2, Plus, Clock, Loader2, AlertTriangle, MoreHorizontal, Pencil, Copy, Download } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePdf } from "@/hooks/usePdf";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 import { Pdf, PdfListProps } from "@/types/pdf";
 
@@ -41,9 +44,35 @@ const PdfList: React.FC<PdfListProps> = ({
   emptyActionPath = "/generate",
   className = "",
 }) => {
-  const { pdfs, loading, handleDelete, handleViewMore, showAll, totalCount } =
+  const { pdfs, loading, handleDelete, handleViewMore, showAll, totalCount, renamePdf, duplicatePdf, isRenaming } =
     usePdf(limit);
   const router = useRouter();
+  const [renameTarget, setRenameTarget] = useState<Pdf | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
+  const downloadPdf = async (pdf: Pdf) => {
+    try {
+      const detailRes = await fetch(`/api/pdfs/${pdf.id}`);
+      if (!detailRes.ok) throw new Error();
+      const detail = await detailRes.json();
+      const html = detail.pdf?.htmlContent;
+      if (!html) throw new Error();
+      const downloadRes = await fetch("/api/downloadPDF", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+      });
+      if (!downloadRes.ok) throw new Error();
+      const url = URL.createObjectURL(await downloadRes.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${pdf.fileName.replace(/\.pdf$/i, "")}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Could not download this document");
+    }
+  };
 
   const handlePdfClick = (pdf: Pdf) => {
     if (pdf.status === "processing" || pdf.status === "queued") {
@@ -172,6 +201,21 @@ const PdfList: React.FC<PdfListProps> = ({
                           ? "Updates automatically"
                           : "Open editor"}
                     </span>
+                    <div className="flex items-center" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                      {pdf.status !== "processing" && pdf.status !== "queued" && pdf.status !== "failed" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label={`Actions for ${pdf.fileName}`} className="size-8">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => { setRenameTarget(pdf); setRenameValue(pdf.fileName); }}><Pencil />Rename</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => duplicatePdf(pdf.id)}><Copy />Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => downloadPdf(pdf)}><Download />Download PDF</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     {showDelete && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <AlertDialog>
@@ -213,6 +257,7 @@ const PdfList: React.FC<PdfListProps> = ({
                         </AlertDialog>
                       </div>
                     )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -233,6 +278,28 @@ const PdfList: React.FC<PdfListProps> = ({
           </Button>
         </div>
       )}
+      <Dialog open={Boolean(renameTarget)} onOpenChange={(open) => !open && setRenameTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename document</DialogTitle>
+            <DialogDescription>Choose a clear name you will recognize on your dashboard.</DialogDescription>
+          </DialogHeader>
+          <Input value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus onKeyDown={async (event) => {
+            if (event.key === "Enter" && renameTarget && renameValue.trim()) {
+              await renamePdf({ pdfId: renameTarget.id, fileName: renameValue.trim() });
+              setRenameTarget(null);
+            }
+          }} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameTarget(null)}>Cancel</Button>
+            <Button disabled={isRenaming || !renameValue.trim()} onClick={async () => {
+              if (!renameTarget) return;
+              await renamePdf({ pdfId: renameTarget.id, fileName: renameValue.trim() });
+              setRenameTarget(null);
+            }}>{isRenaming ? "Renaming…" : "Rename"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

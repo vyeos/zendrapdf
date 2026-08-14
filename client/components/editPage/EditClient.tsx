@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Menu, X, Dot } from "lucide-react";
+import { Menu, X, Dot, Undo2, Redo2 } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import EditPDF from "./EditPDF";
 import PDFPreview from "@/components/editPage/PDFPreview";
@@ -29,6 +29,10 @@ export default function EditClient({ id }: { id: string }) {
     contextFiles,
     isContext,
     isDirty,
+    history,
+    future,
+    undo,
+    redo,
     setContextFiles,
   } = useEditorStore();
 
@@ -52,6 +56,17 @@ export default function EditClient({ id }: { id: string }) {
       document.removeEventListener("click", warnBeforeNavigation, true);
     };
   }, [isDirty]);
+
+  useEffect(() => {
+    const handleHistoryShortcut = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    };
+    document.addEventListener("keydown", handleHistoryShortcut);
+    return () => document.removeEventListener("keydown", handleHistoryShortcut);
+  }, [undo, redo]);
 
   useEffect(() => {
     const fetchContextFiles = async () => {
@@ -201,6 +216,8 @@ export default function EditClient({ id }: { id: string }) {
               {isDirty ? "Unsaved changes" : "All changes saved"}
             </p>
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={undo} disabled={history.length === 0} aria-label="Undo last edit"><Undo2 className="size-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={redo} disabled={future.length === 0} aria-label="Redo last edit"><Redo2 className="size-4" /></Button>
               <SaveChanges />
               <DownloadPDF />
               <DownloadAsWord />
@@ -216,7 +233,9 @@ export default function EditClient({ id }: { id: string }) {
                 className="font-medium text-sm w-full"
               />
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button variant="ghost" size="icon" onClick={undo} disabled={history.length === 0} aria-label="Undo last edit"><Undo2 className="size-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={redo} disabled={future.length === 0} aria-label="Redo last edit"><Redo2 className="size-4" /></Button>
               <SaveChanges />
               <DownloadPDF />
               <DownloadAsWord />

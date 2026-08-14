@@ -7,6 +7,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   fileName: "Untitled",
   draftHtml: "",
   isDirty: false,
+  history: [],
+  future: [],
 
   contextFiles: [],
   isContext: false,
@@ -29,6 +31,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       isContext,
       status: "prompt",
       isDirty: false,
+      history: [],
+      future: [],
       selectedId: "",
       selectedText: "",
       showAiResponse: false,
@@ -40,6 +44,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       fileName: "Untitled",
       draftHtml: "",
       isDirty: false,
+      history: [],
+      future: [],
       contextFiles: [],
       isContext: false,
       status: "idle",
@@ -52,14 +58,46 @@ export const useEditorStore = create<EditorState>((set) => ({
     }),
 
   updateDraftHtml: (html) =>
-    set({
+    set((state) => ({
       draftHtml: html,
       isDirty: true,
-    }),
+      history: state.draftHtml && state.draftHtml !== html
+        ? [...state.history.slice(-49), state.draftHtml]
+        : state.history,
+      future: [],
+    })),
 
   updateFileName: (name) => set({ fileName: name, isDirty: true }),
 
   markSaved: () => set({ isDirty: false }),
+
+  undo: () => set((state) => {
+    const previous = state.history.at(-1);
+    if (!previous) return state;
+    return {
+      draftHtml: previous,
+      history: state.history.slice(0, -1),
+      future: [state.draftHtml, ...state.future].slice(0, 50),
+      isDirty: true,
+      selectedId: "",
+      selectedText: "",
+      showAiResponse: false,
+    };
+  }),
+
+  redo: () => set((state) => {
+    const next = state.future[0];
+    if (!next) return state;
+    return {
+      draftHtml: next,
+      history: [...state.history.slice(-49), state.draftHtml],
+      future: state.future.slice(1),
+      isDirty: true,
+      selectedId: "",
+      selectedText: "",
+      showAiResponse: false,
+    };
+  }),
 
   setContextFiles: (files) => set({ contextFiles: files }),
 

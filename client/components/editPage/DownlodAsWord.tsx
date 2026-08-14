@@ -85,7 +85,7 @@ const DownloadAsWord = () => {
       size="lg"
       onClick={handleDownload}
       disabled={loading}
-      className="hover:scale-105 transition-transform cursor-pointer bg-blue-600/90 hover:bg-blue-600 text-white"
+      className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
     >
       {loading ? (
         <Loader2 className="w-4 h-4 animate-spin" />

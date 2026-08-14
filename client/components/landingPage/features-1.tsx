@@ -50,7 +50,7 @@ export default function Features() {
               <h3 className="mt-6 font-medium">Powerful Tools</h3>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground -mt-6">Convert, merge, split, and compress PDFs. Everything you need in one place.</p>
+              <p className="text-sm text-muted-foreground -mt-6">Convert, merge, and split PDFs. Everything you need in one place.</p>
             </CardContent>
           </Card>
         </div>

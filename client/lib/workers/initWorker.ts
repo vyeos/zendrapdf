@@ -1,7 +1,6 @@
 import { createPdfWorker } from "./pdfWorker";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __pdfWorkerStarted: boolean | undefined;
 }
 

@@ -223,7 +223,7 @@ export default function UploadFiles() {
                     </span>
                     <button
                       onClick={() => removeFile(fName)}
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-1.5 py-0.5 rounded-md transition text-[11px]"
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-1.5 py-0.5 rounded-md transition text-xs"
                       disabled={isRemoving}
                     >
                       {isRemoving ? (

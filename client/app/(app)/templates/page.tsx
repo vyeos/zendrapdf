@@ -131,7 +131,7 @@ const TemplatesPage = () => {
                       >
                         <Icon className="w-6 h-6" />
                       </div>
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground border px-2 py-0.5 rounded-full">
+                      <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground border px-2 py-0.5 rounded-full">
                         {config.label}
                       </span>
                     </div>

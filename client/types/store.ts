@@ -3,6 +3,8 @@ export interface EditorState {
     fileName: string;
     draftHtml: string;
     isDirty: boolean;
+    history: string[];
+    future: string[];
 
     contextFiles: string[];
     isContext: boolean;
@@ -28,6 +30,8 @@ export interface EditorState {
     updateDraftHtml: (html: string) => void;
     updateFileName: (name: string) => void;
     markSaved: () => void;
+    undo: () => void;
+    redo: () => void;
     setContextFiles: (files: string[]) => void;
     setIsContext: (isContext: boolean) => void;
 

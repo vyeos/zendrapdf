@@ -103,7 +103,7 @@ export function NavUser({
                   {user.name}
                 </p>
                 {user.isCreator && (
-                  <span className="text-[11px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-md">
                     PRO
                   </span>
                 )}

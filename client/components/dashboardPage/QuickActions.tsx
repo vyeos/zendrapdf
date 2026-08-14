@@ -37,7 +37,7 @@ const QuickActions = () => {
     },
     {
       title: "Toolbox",
-      description: "Merge, split & compress",
+      description: "Convert, merge, and split files",
       icon: Wrench,
       href: "/tools",
       color: "bg-purple-500/10",
