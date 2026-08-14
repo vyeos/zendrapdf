@@ -28,8 +28,30 @@ export default function EditClient({ id }: { id: string }) {
     resetEditor,
     contextFiles,
     isContext,
+    isDirty,
     setContextFiles,
   } = useEditorStore();
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    const warnBeforeNavigation = (event: MouseEvent) => {
+      const link = (event.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+      if (!link || link.target === "_blank" || link.href === window.location.href) return;
+      if (!window.confirm("You have unsaved changes. Leave without saving?")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    document.addEventListener("click", warnBeforeNavigation, true);
+    return () => {
+      window.removeEventListener("beforeunload", warnBeforeUnload);
+      document.removeEventListener("click", warnBeforeNavigation, true);
+    };
+  }, [isDirty]);
 
   useEffect(() => {
     const fetchContextFiles = async () => {
@@ -62,8 +84,11 @@ export default function EditClient({ id }: { id: string }) {
     return () => resetEditor();
   }, [serverPdf, id, initializeEditor, resetEditor, isContext]);
 
+  useEffect(() => {
+    if (isError) router.replace("/dashboard");
+  }, [isError, router]);
+
   if (isError) {
-    router.push("/dashboard");
     return null;
   }
 
@@ -172,6 +197,9 @@ export default function EditClient({ id }: { id: string }) {
                 )}
               </div>
             </div>
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              {isDirty ? "Unsaved changes" : "All changes saved"}
+            </p>
             <div className="flex items-center gap-2">
               <SaveChanges />
               <DownloadPDF />

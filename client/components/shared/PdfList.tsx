@@ -51,7 +51,8 @@ const PdfList: React.FC<PdfListProps> = ({
       return;
     }
     if (pdf.status === "failed") {
-      toast.error(`Generation failed: ${pdf.errorMessage || "Unknown error"}`);
+      toast.error(pdf.errorMessage || "Generation failed. Your credits were refunded.");
+      router.push("/generate");
       return;
     }
     router.push(`/edit/${pdf.id}`);
@@ -140,11 +141,11 @@ const PdfList: React.FC<PdfListProps> = ({
                           {pdf.fileName}
                         </h3>
                         {pdf.status === "processing" || pdf.status === "queued" ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
                             Processing
                           </span>
                         ) : pdf.status === "failed" ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
                             Failed
                           </span>
                         ) : null}
@@ -163,7 +164,14 @@ const PdfList: React.FC<PdfListProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <span className={pdf.status === "failed" ? "text-destructive" : "text-muted-foreground"}>
+                      {pdf.status === "failed"
+                        ? "Try again"
+                        : pdf.status === "processing" || pdf.status === "queued"
+                          ? "Updates automatically"
+                          : "Open editor"}
+                    </span>
                     {showDelete && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <AlertDialog>

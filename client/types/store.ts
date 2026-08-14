@@ -27,6 +27,7 @@ export interface EditorState {
 
     updateDraftHtml: (html: string) => void;
     updateFileName: (name: string) => void;
+    markSaved: () => void;
     setContextFiles: (files: string[]) => void;
     setIsContext: (isContext: boolean) => void;
 

@@ -137,10 +137,10 @@ export default function UploadFiles() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-xs sm:text-sm font-semibold text-foreground">
-          Reference Documents (RAG Context)
+        <label className="text-sm font-semibold text-foreground">
+          Reference documents
         </label>
-        <span className="text-[11px] text-muted-foreground font-medium bg-muted/40 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-muted-foreground font-medium bg-muted/40 px-2 py-0.5 rounded-full">
           {contextFiles.length} / 5 uploaded
         </span>
       </div>
@@ -183,10 +183,10 @@ export default function UploadFiles() {
               }`}
               size={24}
             />
-            <p className="text-xs font-semibold text-primary">
-              {loading ? "Indexing Vector Embeddings..." : "Drop PDF here or click to browse"}
+            <p className="text-sm font-semibold text-primary">
+              {loading ? "Preparing reference…" : "Drop PDF here or click to browse"}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Supports PDF up to 5MB
             </p>
             <input
@@ -206,7 +206,7 @@ export default function UploadFiles() {
         {contextFiles.length > 0 && (
           <div className="sm:w-1/2 flex flex-col justify-start">
             <div className="text-xs font-medium text-muted-foreground mb-1.5">
-              Attached Knowledge Base
+              Attached references
             </div>
             <div className="max-h-[130px] overflow-y-auto pr-1 space-y-1.5">
               <AnimatePresence>

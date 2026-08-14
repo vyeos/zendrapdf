@@ -1,13 +1,13 @@
 "use client";
 
-import { Dot, Save, Loader2 } from "lucide-react";
+import { Check, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { useEditorStore } from "@/store/useEditorStore";
 import { useSavePdf } from "@/hooks/mutations/useSavePdf";
 
 const SaveChanges = () => {
-  const { activePdfId, fileName, draftHtml, isDirty } = useEditorStore();
+  const { activePdfId, fileName, draftHtml, isDirty, markSaved } = useEditorStore();
 
   const { mutate: savePdf, isPending } = useSavePdf();
 
@@ -27,11 +27,10 @@ const SaveChanges = () => {
     }
     const cleanHtml = doc.documentElement.outerHTML;
 
-    savePdf({
-      id: activePdfId,
-      html: cleanHtml,
-      fileName,
-    });
+    savePdf(
+      { id: activePdfId, html: cleanHtml, fileName },
+      { onSuccess: markSaved },
+    );
   };
 
   return (
@@ -39,19 +38,17 @@ const SaveChanges = () => {
       variant="secondary"
       size="lg"
       onClick={handleSave}
-      disabled={isPending}
-      className="hover:scale-105 transition-transform cursor-pointer"
+      disabled={isPending || !isDirty}
+      aria-live="polite"
     >
       {isPending ? (
         <Loader2 className="w-4 h-4 animate-spin" />
-      ) : (
+      ) : isDirty ? (
         <Save className="w-4 h-4" />
+      ) : (
+        <Check className="w-4 h-4" />
       )}
-      <span>Save</span>
-
-      {isDirty && (
-        <Dot className="text-primary -mr-2 scale-200 animate-caret-blink" />
-      )}
+      <span>{isPending ? "Saving…" : isDirty ? "Save changes" : "Saved"}</span>
     </Button>
   );
 };

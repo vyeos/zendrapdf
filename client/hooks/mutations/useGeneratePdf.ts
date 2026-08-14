@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { userKeys, pdfKeys } from "@/lib/queryKeys";
@@ -36,14 +37,18 @@ export function useGeneratePdf() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { initializeEditor } = useEditorStore();
+  const [progress, setProgress] = useState(0);
+  const [jobStatus, setJobStatus] = useState("queued");
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (payload: {
       userPrompt: string;
       fileName: string;
       isContext: boolean;
       pdfId?: string;
     }) => {
+      setProgress(5);
+      setJobStatus("queued");
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,13 +76,21 @@ export function useGeneratePdf() {
 
       // Poll until job completes
       toast.info("Generation queued! Processing AI workflow in background...", { id: queueRes.jobId });
-      const completedJob = await pollJobUntilComplete(queueRes.jobId);
+      const completedJob = await pollJobUntilComplete(
+        queueRes.jobId,
+        (nextProgress, nextStatus) => {
+          setProgress(nextProgress);
+          setJobStatus(nextStatus || "processing");
+        },
+      );
       return {
         ...queueRes,
         htmlContent: completedJob.htmlContent,
       };
     },
     onSuccess: (data, variables) => {
+      setProgress(100);
+      setJobStatus("completed");
       queryClient.invalidateQueries({ queryKey: pdfKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
 
@@ -94,6 +107,7 @@ export function useGeneratePdf() {
       router.push(`/edit/${data.pdfId}`);
     },
     onError: (error: Error) => {
+      setJobStatus("failed");
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       if (error.message !== "DAILY TOKEN LIMIT REACHED") {
         console.error(error);
@@ -104,4 +118,6 @@ export function useGeneratePdf() {
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
+
+  return { ...mutation, progress, jobStatus };
 }

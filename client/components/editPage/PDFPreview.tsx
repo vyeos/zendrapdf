@@ -3,6 +3,8 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { toast } from "sonner";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PDFPreviewProps {
   loading: boolean;
@@ -80,14 +82,8 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
 
     setAiResponse("");
     setAiStatus("prompt");
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(draftHtml, "text/html");
-    const el = doc.getElementById(selectedId);
-    if (el) el.classList.remove("selected");
-
-    updateDraftHtml(doc.documentElement.outerHTML);
-  }, [selectedId, draftHtml, updateDraftHtml, setAiResponse, setAiStatus]);
+    clearSelection();
+  }, [selectedId, setAiResponse, setAiStatus, clearSelection]);
 
   useEffect(() => {
     const previouslySelected = document.querySelectorAll(".selected");
@@ -100,6 +96,13 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
       }
     }
   }, [selectedId, draftHtml]);
+
+  useEffect(() => {
+    document.querySelectorAll<HTMLElement>("#pdf-root .selectable").forEach((element) => {
+      element.tabIndex = 0;
+      element.setAttribute("aria-label", `Edit section: ${element.innerText.slice(0, 80)}`);
+    });
+  }, [draftHtml]);
 
   useEffect(() => {
     if (!showAiResponse || !selectedId || !aiResponse) {
@@ -127,56 +130,14 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
     newEl.classList.add("preview-mode");
     newEl.id = `${selectedId}-preview`;
 
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "relative";
-    wrapper.style.display = "block";
-
-    wrapper.appendChild(newEl);
-
-    const toolbar = document.createElement("div");
-    toolbar.className =
-      "ai-action-toolbar absolute z-50 flex gap-2 mt-2 bg-background border border-border shadow-lg rounded-md p-1.5";
-    toolbar.style.bottom = "-45px";
-    toolbar.style.right = "0px";
-    toolbar.style.whiteSpace = "nowrap";
-
-    toolbar.innerHTML = `
-      <button id="btn-accept" class="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs font-medium rounded transition cursor-pointer">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        Accept
-      </button>
-      <button id="btn-reject" class="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 text-xs font-medium rounded transition cursor-pointer">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        Reject
-      </button>
-    `;
-    wrapper.appendChild(toolbar);
-
-    originalEl.insertAdjacentElement("afterend", wrapper);
+    originalEl.insertAdjacentElement("afterend", newEl);
     originalEl.style.display = "none";
 
-    previewNodeRef.current = wrapper;
-
-    const acceptBtn = toolbar.querySelector("#btn-accept");
-    const rejectBtn = toolbar.querySelector("#btn-reject");
-
-    const onAccept = (e: Event) => {
-      e.stopPropagation();
-      handleAccept();
-    };
-    const onReject = (e: Event) => {
-      e.stopPropagation();
-      handleReject();
-    };
-
-    acceptBtn?.addEventListener("click", onAccept);
-    rejectBtn?.addEventListener("click", onReject);
+    previewNodeRef.current = newEl;
 
     return () => {
-      acceptBtn?.removeEventListener("click", onAccept);
-      rejectBtn?.removeEventListener("click", onReject);
-      if (wrapper && wrapper.parentNode) {
-        wrapper.remove();
+      if (newEl.parentNode) {
+        newEl.remove();
       }
       if (originalEl) {
         originalEl.style.display = "";
@@ -185,15 +146,11 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
     };
   }, [showAiResponse, selectedId, aiResponse, handleAccept, handleReject]);
 
-  const handlePdfClick = (e: React.MouseEvent) => {
+  const selectTarget = (target: HTMLElement | null) => {
     if (showAiResponse) {
       toast.info("Please Accept or Reject the AI suggestion first.");
       return;
     }
-
-    const target = (e.target as HTMLElement).closest(
-      ".selectable",
-    ) as HTMLElement | null;
 
     if (!target || target.id === "pdf-root" || target.tagName === "BODY")
       return;
@@ -207,6 +164,10 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
       selectElement(target.id, target.innerText, target.outerHTML);
       if (onTextSelect) onTextSelect();
     }
+  };
+
+  const handlePdfClick = (event: React.MouseEvent) => {
+    selectTarget((event.target as HTMLElement).closest(".selectable") as HTMLElement | null);
   };
 
   if (loading) {
@@ -224,26 +185,42 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ loading, onTextSelect }) => {
   }
 
   return (
-    <div
-      id="pdf-root"
-      className="h-full w-full bg-white p-8 overflow-y-auto shadow-sm text-black"
-      dangerouslySetInnerHTML={{ __html: draftHtml }}
-      onMouseOver={(e) => {
-        if (showAiResponse) return;
-        const target = (e.target as HTMLElement).closest(
-          ".selectable",
-        ) as HTMLElement | null;
-        if (target) target.classList.add("hovered");
-      }}
-      onMouseOut={(e) => {
-        const target = (e.target as HTMLElement).closest(
-          ".selectable",
-        ) as HTMLElement | null;
-        if (target) target.classList.remove("hovered");
-      }}
-      onClick={handlePdfClick}
-      style={{ cursor: showAiResponse ? "default" : "text" }}
-    />
+    <div className="relative h-full w-full">
+      <p id="editor-instructions" className="sr-only">Move through editable sections with Tab and press Enter to select one.</p>
+      <div
+        id="pdf-root"
+        aria-describedby="editor-instructions"
+        className="h-full w-full bg-white p-8 overflow-y-auto shadow-sm text-black"
+        dangerouslySetInnerHTML={{ __html: draftHtml }}
+        onMouseOver={(e) => {
+          if (showAiResponse) return;
+          const target = (e.target as HTMLElement).closest(".selectable") as HTMLElement | null;
+          if (target) target.classList.add("hovered");
+        }}
+        onMouseOut={(e) => {
+          const target = (e.target as HTMLElement).closest(".selectable") as HTMLElement | null;
+          if (target) target.classList.remove("hovered");
+        }}
+        onClick={handlePdfClick}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            const target = (event.target as HTMLElement).closest(".selectable") as HTMLElement | null;
+            if (target) {
+              event.preventDefault();
+              selectTarget(target);
+            }
+          }
+        }}
+        style={{ cursor: showAiResponse ? "default" : "text" }}
+      />
+      {showAiResponse && (
+        <div className="absolute bottom-4 right-4 z-50 flex gap-2 rounded-xl border bg-background p-2 shadow-xl" role="status" aria-live="polite">
+          <span className="self-center px-2 text-sm font-medium">Review AI suggestion</span>
+          <Button size="sm" onClick={handleAccept}><Check className="size-4" />Accept</Button>
+          <Button size="sm" variant="destructive" onClick={handleReject}><X className="size-4" />Reject</Button>
+        </div>
+      )}
+    </div>
   );
 };
 

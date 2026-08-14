@@ -11,12 +11,16 @@ interface AIWorkingProps {
   prompt: string
   fileName: string
   status?: 'working' | 'success' | 'error'
+  progress?: number
+  jobStatus?: string
 }
 
 const AIWorking: React.FC<AIWorkingProps> = ({
   prompt,
   fileName,
   status = 'working',
+  progress = 5,
+  jobStatus = 'queued',
 }) => {
   const [showPrompt, setShowPrompt] = useState(false)
 
@@ -41,6 +45,14 @@ const AIWorking: React.FC<AIWorkingProps> = ({
         return 'text-primary'
     }
   }
+
+  const normalizedProgress = Math.max(5, Math.min(progress, 100));
+  const stages = [
+    { label: "Queued", threshold: 5 },
+    { label: "Creating content", threshold: 25 },
+    { label: "Designing document", threshold: 65 },
+    { label: "Finalizing PDF", threshold: 90 },
+  ];
 
   return (
     <div className="h-full flex items-center justify-center bg-background p-4">
@@ -75,8 +87,8 @@ const AIWorking: React.FC<AIWorkingProps> = ({
               >
                 {getStatusText()}
               </motion.h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Your task is queued and processing asynchronously via BullMQ & Redis.
+              <p className="text-sm text-muted-foreground" aria-live="polite">
+                {jobStatus === "queued" ? "Waiting for a generation worker" : "Your document is being prepared in the background"}
               </p>
             </div>
 
@@ -85,20 +97,24 @@ const AIWorking: React.FC<AIWorkingProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 space-y-2.5 bg-muted/20 p-4 rounded-lg border border-border/50 text-xs sm:text-sm"
+                className="mb-6 space-y-4 bg-muted/20 p-4 rounded-lg border border-border/50 text-sm"
               >
-                <div className="flex items-center gap-2.5 text-foreground font-medium">
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>Enqueued to Background Job Worker</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium">
+                    <span>Generation progress</span><span>{Math.round(normalizedProgress)}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(normalizedProgress)}>
+                    <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${normalizedProgress}%` }} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                  <span>Executing Multi-layer AI Prompt & Context Refinement</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                  <span>Injecting Inline CSS Typography & HTML Rendering</span>
-                </div>
+                <ol className="grid gap-2 sm:grid-cols-2">
+                  {stages.map((stage) => (
+                    <li key={stage.label} className={normalizedProgress >= stage.threshold ? "text-foreground" : "text-muted-foreground"}>
+                      <span aria-hidden="true" className={`mr-2 inline-block size-2 rounded-full ${normalizedProgress >= stage.threshold ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                      {stage.label}
+                    </li>
+                  ))}
+                </ol>
               </motion.div>
             )}
 
@@ -146,25 +162,14 @@ const AIWorking: React.FC<AIWorkingProps> = ({
             {/* Background Navigation Notice */}
             {status === "working" && (
               <div className="space-y-4 my-6">
-                <div className="text-center text-xs text-muted-foreground">
-                  You can safely navigate away! The document will process in the background.
+                <div className="text-center text-sm text-muted-foreground">
+                  This usually takes one to three minutes. You can safely navigate away and follow progress from the dashboard.
                 </div>
                 <div className="flex justify-center">
                   <Link href="/dashboard">
-                    <Button variant="secondary" className="text-xs">
+                    <Button variant="secondary">
                       Go to Dashboard & View Progress
                     </Button>
-                  </Link>
-                </div>
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <Link href="/tools/pdf-to-word" className="hover:underline text-blue-600 dark:text-blue-400 text-xs">
-                    PDF to Word
-                  </Link>
-                  <Link href="/tools/split-pdf" className="hover:underline text-orange-600 dark:text-orange-400 text-xs">
-                    Split PDF
-                  </Link>
-                  <Link href="/tools/merge-pdf" className="hover:underline text-purple-600 dark:text-purple-400 text-xs">
-                    Merge
                   </Link>
                 </div>
               </div>

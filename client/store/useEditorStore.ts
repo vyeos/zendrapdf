@@ -57,7 +57,9 @@ export const useEditorStore = create<EditorState>((set) => ({
       isDirty: true,
     }),
 
-  updateFileName: (name) => set({ fileName: name }),
+  updateFileName: (name) => set({ fileName: name, isDirty: true }),
+
+  markSaved: () => set({ isDirty: false }),
 
   setContextFiles: (files) => set({ contextFiles: files }),
 
