@@ -157,13 +157,13 @@ const AIWorking: React.FC<AIWorkingProps> = ({
                   </Link>
                 </div>
                 <div className="flex items-center justify-center gap-3 pt-2">
-                  <Link href="/pdf-to-word" className="hover:underline text-blue-600 dark:text-blue-400 text-xs">
+                  <Link href="/tools/pdf-to-word" className="hover:underline text-blue-600 dark:text-blue-400 text-xs">
                     PDF to Word
                   </Link>
-                  <Link href="/compress-pdf" className="hover:underline text-red-600 dark:text-red-400 text-xs">
-                    Compress
+                  <Link href="/tools/split-pdf" className="hover:underline text-orange-600 dark:text-orange-400 text-xs">
+                    Split PDF
                   </Link>
-                  <Link href="/merge-pdf" className="hover:underline text-purple-600 dark:text-purple-400 text-xs">
+                  <Link href="/tools/merge-pdf" className="hover:underline text-purple-600 dark:text-purple-400 text-xs">
                     Merge
                   </Link>
                 </div>

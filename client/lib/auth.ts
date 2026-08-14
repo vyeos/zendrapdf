@@ -39,6 +39,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await resend.emails.send({
+        from: "zendrapdf@sahilpatel.me",
+        to: user.email,
+        subject: "Reset your ZendraPdf password",
+        text: `Reset your password using this secure link: ${url}\n\nIf you did not request this, you can safely ignore this email.`,
+      });
+    },
   },
   socialProviders: {
     google: {

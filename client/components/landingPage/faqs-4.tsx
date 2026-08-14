@@ -16,8 +16,8 @@ export default function FAQsFour() {
     },
     {
       id: 'item-3',
-      question: 'Can I change or cancel my order?',
-      answer: 'You can modify or cancel your order within 1 hour of placing it. After this window, please contact our customer support team who will assist you with any changes.',
+      question: 'Can I revise a document after it is generated?',
+      answer: 'Yes. Open the document in the editor, select the section you want to change, and either replace the text directly or ask AI to refine it.',
     },
     {
       id: 'item-4',
@@ -80,8 +80,8 @@ export default function FAQsFour() {
             ))}
           </Accordion>
 
-          <p className="text-muted-foreground mt-6 flex justify-center items-center">
-            {`Can't find what you're looking for? Message the devs.`}
+          <p className="text-muted-foreground mt-6 flex justify-center items-center text-center">
+            Can&apos;t find what you&apos;re looking for? Contact us through the links below.
           </p>
 
         </div>

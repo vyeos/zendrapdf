@@ -98,8 +98,8 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({
             How it works
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Our service uses advanced technologies for instant auto parts search
-            across thousands of stores in your city
+            Go from a clear brief to a polished, editable document in three
+            straightforward steps.
           </p>
         </div>
 
