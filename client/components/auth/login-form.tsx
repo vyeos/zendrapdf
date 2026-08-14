@@ -23,16 +23,16 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { userKeys } from "@/lib/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email("Enter a valid email address."),
   password: z.string().min(8, {
-    message: "Password must be atleast 8 characters.",
+    message: "Password must be at least 8 characters.",
   }),
 });
 
@@ -42,6 +42,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -82,7 +83,9 @@ export function LoginForm({
       });
 
       if (error) {
-        toast.error(error.message || "Failed to sign in.");
+        form.setError("root", {
+          message: error.message || "We could not sign you in. Check your details and try again.",
+        });
         setIsLoading(false);
         return;
       }
@@ -95,7 +98,7 @@ export function LoginForm({
         router.replace(callbackUrl);
       }
     } catch {
-      toast.error("An unexpected error occurred");
+      form.setError("root", { message: "An unexpected error occurred. Please try again." });
       setIsLoading(false);
     }
   }
@@ -105,7 +108,7 @@ export function LoginForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Login with your Google account</CardDescription>
+          <CardDescription>Sign in to continue to your documents</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -148,7 +151,12 @@ export function LoginForm({
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="m@example.com" {...field} />
+                          <Input
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -163,13 +171,25 @@ export function LoginForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="********"
-                              {...field}
-                              type="password"
-                            />
-                          </FormControl>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your password"
+                                {...field}
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="current-password"
+                                className="pr-10"
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              onClick={() => setShowPassword((visible) => !visible)}
+                              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                            </button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -187,6 +207,11 @@ export function LoginForm({
                   </div>
 
                   {/* Submit */}
+                  {form.formState.errors.root?.message && (
+                    <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      {form.formState.errors.root.message}
+                    </p>
+                  )}
                   <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
                     {isLoading ? (
                       <Loader2 className="size-4 animate-spin" />

@@ -44,7 +44,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ onOpenChange }) => {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { user } = useUser();
-  const { pdfs, loading } = usePdf();
+  const { pdfs, loading } = usePdf(8, Boolean(user) && open);
   const { mutate: logout } = useLogout();
 
   // Keyboard shortcut (Ctrl/Cmd + K)
@@ -258,7 +258,11 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ onOpenChange }) => {
                   className="h-10 w-full rounded-md bg-transparent text-md outline-none placeholder:text-muted-foreground"
                   autoFocus
                 />
-                <button>
+                <button
+                  type="button"
+                  aria-label="Close command palette"
+                  onClick={() => onOpenChange(false)}
+                >
                   <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                     esc
                   </kbd>

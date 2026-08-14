@@ -23,7 +23,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { userKeys } from "@/lib/queryKeys";
@@ -31,11 +31,11 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(3, {
-    message: "Name must be atleast 3 characters.",
+    message: "Name must be at least 3 characters.",
   }),
-  email: z.string().email(),
+  email: z.string().email("Enter a valid email address."),
   password: z.string().min(8, {
-    message: "Password must be atleast 8 characters.",
+    message: "Password must be at least 8 characters.",
   }),
 });
 
@@ -45,6 +45,7 @@ export function SignupForm({
 }: React.ComponentProps<"div">) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -86,7 +87,9 @@ export function SignupForm({
       });
 
       if (error) {
-        toast.error(error.message || "Failed to sign up.");
+        form.setError("root", {
+          message: error.message || "We could not create your account. Please try again.",
+        });
         setIsLoading(false);
         return;
       }
@@ -100,7 +103,7 @@ export function SignupForm({
         router.replace(callbackUrl);
       }
     } catch {
-      toast.error("An unexpected error occurred");
+      form.setError("root", { message: "An unexpected error occurred. Please try again." });
       setIsLoading(false);
     }
   }
@@ -110,7 +113,7 @@ export function SignupForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome</CardTitle>
-          <CardDescription>Continue with your Google account</CardDescription>
+          <CardDescription>Create an account with Google or email</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -148,7 +151,7 @@ export function SignupForm({
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Tony Stark" {...field} />
+                          <Input autoComplete="name" placeholder="Your name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -161,7 +164,7 @@ export function SignupForm({
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="tony@avengers.com" {...field} />
+                          <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -174,18 +177,35 @@ export function SignupForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="********"
-                              {...field}
-                              type="password"
-                            />
-                          </FormControl>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                placeholder="At least 8 characters"
+                                {...field}
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                className="pr-10"
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              onClick={() => setShowPassword((visible) => !visible)}
+                              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                            </button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+                  {form.formState.errors.root?.message && (
+                    <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      {form.formState.errors.root.message}
+                    </p>
+                  )}
                   <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
                     {isLoading ? (
                       <Loader2 className="size-4 animate-spin" />

@@ -12,7 +12,7 @@ export interface PdfListItem {
   htmlContent?: string | null;
 }
 
-export function usePdf(initialLimit: number = 8) {
+export function usePdf(initialLimit: number = 8, enabled: boolean = true) {
   const queryClient = useQueryClient();
   const [showAll, setShowAll] = useState(false);
 
@@ -27,6 +27,7 @@ export function usePdf(initialLimit: number = 8) {
       if (!res.ok) throw new Error("Failed to fetch PDFs");
       return res.json();
     },
+    enabled,
     staleTime: 5 * 1000,
     refetchInterval: (query) => {
       // Auto refetch every 3 seconds if any PDF is currently processing/queued
