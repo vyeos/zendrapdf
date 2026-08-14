@@ -4,7 +4,7 @@ import React from 'react'
 
 const Page = () => {
   return (
-    <div className='h-screen flex flex-col'>
+    <div className='h-full min-h-0 flex flex-col'>
       <TitleNav text="Account Settings" />
       <div className='flex-1 overflow-auto'>
         <AccountSettings />

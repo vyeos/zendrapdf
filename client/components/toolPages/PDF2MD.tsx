@@ -188,6 +188,15 @@ const PDF2MD = () => {
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload PDFs to convert to Markdown"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <Upload className="text-green-600 mb-4" size={40} />
           <p className="text-lg font-medium text-green-500">

@@ -200,6 +200,7 @@ export default function Navbar() {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Open search"
               onClick={() => setOpen(true)}
               className="hidden md:flex h-9 w-9 text-muted-foreground hover:text-foreground"
             >
@@ -237,6 +238,7 @@ export default function Navbar() {
                     <Button
                       variant="secondary"
                       size="icon"
+                      aria-label="Open account menu"
                       className="rounded-full h-9 w-9 border border-border/50 shadow-sm"
                     >
                       {monogram}
@@ -302,6 +304,7 @@ export default function Navbar() {
               {user && (
                 <Link
                   href="/generate"
+                  aria-label="Create PDF"
                   className="p-2 rounded-full bg-primary/10 text-primary"
                 >
                   <Plus className="w-4 h-4" />
@@ -310,6 +313,7 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Open navigation menu"
                 onClick={() => setMobileOpen(true)}
                 className="md:hidden"
               >

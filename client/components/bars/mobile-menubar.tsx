@@ -13,6 +13,7 @@ import {
   Settings,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 
 interface Items {
@@ -53,6 +54,20 @@ const MobileMenubar: React.FC<MobileMenubarProps> = ({
   handleLogout,
   isLoading,
 }) => {
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileOpen, setMobileOpen]);
+
   return (
     <AnimatePresence>
       {mobileOpen && (
@@ -72,6 +87,9 @@ const MobileMenubar: React.FC<MobileMenubarProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
             className="fixed inset-y-0 right-0 z-50 w-full max-w-xs bg-background border-l border-border shadow-2xl flex flex-col md:hidden"
           >
             {/* Header */}
@@ -82,6 +100,8 @@ const MobileMenubar: React.FC<MobileMenubarProps> = ({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Close navigation menu"
+                  autoFocus
                   onClick={() => setMobileOpen(false)}
                 >
                   <X className="w-5 h-5" />

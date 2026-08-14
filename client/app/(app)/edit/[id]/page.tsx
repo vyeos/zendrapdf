@@ -10,7 +10,7 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { id } = await params
   return (
-    <div className='h-screen flex flex-col bg-background'>
+    <div className='h-full min-h-0 flex flex-col bg-background'>
       <TitleNav text='Edit PDF' />
       <EditClient id={id} />
     </div>

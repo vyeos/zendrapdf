@@ -73,6 +73,8 @@ export default function EditClient({ id }: { id: string }) {
       <Button
         variant="secondary"
         onClick={() => toggleSidebar()}
+        aria-label={isSidebarOpen ? "Close editing tools" : "Open editing tools"}
+        aria-expanded={isSidebarOpen}
         className={`lg:hidden fixed bottom-4 left-4 z-20 p-3 rounded-full transition-all`}
       >
         {isSidebarOpen ? (

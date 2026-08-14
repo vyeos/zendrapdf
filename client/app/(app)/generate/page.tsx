@@ -5,7 +5,7 @@ import LumaSpin from "@/components/21st/LumaSpin";
 
 const Page = () => {
   return (
-    <div className="h-dvh flex flex-col overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col overflow-hidden">
       <TitleNav text="Generate PDF" />
       <div className="flex-1 min-h-0 overflow-auto">
         <Suspense

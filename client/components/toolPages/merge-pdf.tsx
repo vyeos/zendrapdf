@@ -186,6 +186,15 @@ const MergePdf = () => {
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload PDF files to merge"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <Upload className="text-purple-500 mb-4" size={40} />
           <p className="text-lg font-medium text-purple-500">
@@ -274,6 +283,7 @@ const MergePdf = () => {
                       onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
                       disabled={index === 0 || isMerging}
                       title="Move Up"
+                      aria-label={`Move ${item.file.name} up`}
                       className="text-muted-foreground hover:text-foreground h-8 w-8 cursor-pointer"
                     >
                       <ArrowUp size={16} />
@@ -287,6 +297,7 @@ const MergePdf = () => {
                       onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
                       disabled={index === files.length - 1 || isMerging}
                       title="Move Down"
+                      aria-label={`Move ${item.file.name} down`}
                       className="text-muted-foreground hover:text-foreground h-8 w-8 cursor-pointer"
                     >
                       <ArrowDown size={16} />
@@ -302,6 +313,7 @@ const MergePdf = () => {
                       onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
                       disabled={isMerging}
                       title="Remove File"
+                      aria-label={`Remove ${item.file.name}`}
                       className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 cursor-pointer"
                     >
                       <Trash2 size={18} />

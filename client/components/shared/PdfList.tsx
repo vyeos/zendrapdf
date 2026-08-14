@@ -112,7 +112,16 @@ const PdfList: React.FC<PdfListProps> = ({
             >
               <Card
                 onClick={() => handlePdfClick(pdf)}
-                className="group h-32 border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handlePdfClick(pdf);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${pdf.status === "failed" ? "View error for" : pdf.status === "processing" || pdf.status === "queued" ? "View processing status for" : "Open"} ${pdf.fileName}`}
+                className="group h-32 border border-border bg-card hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-300 cursor-pointer relative overflow-hidden"
               >
                 <CardContent className="p-4 h-full flex flex-col justify-between">
                   <div className="flex items-start gap-3">
@@ -162,7 +171,8 @@ const PdfList: React.FC<PdfListProps> = ({
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              aria-label={`Delete ${pdf.fileName}`}
+                              className="h-8 w-8 -mr-2 -mt-2 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 transition-all duration-200"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

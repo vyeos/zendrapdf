@@ -12,12 +12,14 @@ export default function SearchBar() {
     return (
         <div className="p-2">
             {state === 'collapsed' ? (
-                <div
-                    className="cursor-pointer h-8 w-8 flex items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors"
+                <button
+                    type="button"
+                    aria-label="Open search"
+                    className="cursor-pointer h-8 w-8 flex items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                     onClick={() => setOpen(true)}
                 >
                     <Search className="size-4 text-sidebar-foreground" />
-                </div>
+                </button>
             ) : (
                 <div className="relative">
                     <Input

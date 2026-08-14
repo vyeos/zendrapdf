@@ -198,6 +198,15 @@ const Word2PDF = () => {
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload Word documents to convert to PDF"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <Upload className="text-blue-500 mb-4" size={40} />
           <p className="text-lg font-medium text-blue-500">

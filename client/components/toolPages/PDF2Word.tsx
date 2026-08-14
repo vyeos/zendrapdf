@@ -188,6 +188,15 @@ const PDF2Word = () => {
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload PDFs to convert to Word"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <Upload className="text-blue-300 mb-4" size={40} />
           <p className="text-lg font-medium text-blue-300">

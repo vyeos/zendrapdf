@@ -4,7 +4,7 @@ import ToolsHome from '@/components/toolPages/tools-home'
 
 const Page = () => {
     return (
-        <div className="h-screen flex flex-col">
+        <div className="h-full min-h-0 flex flex-col">
             <TitleNav text="Tools" />
             <div className="flex-1 overflow-hidden p-4">
                 <div className="bg-card border border-border rounded-xl p-4 h-full flex flex-col">

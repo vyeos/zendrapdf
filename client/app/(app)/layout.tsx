@@ -10,7 +10,7 @@ export default async function AppLayout({
 }) {
   return (
     <AuthGuard>
-      <nav className="flex h-dvh w-screen">
+      <div className="flex h-dvh w-full overflow-hidden">
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
@@ -19,7 +19,7 @@ export default async function AppLayout({
             </main>
           </SidebarInset>
         </SidebarProvider>
-      </nav>
+      </div>
     </AuthGuard>
   );
 }

@@ -14,22 +14,22 @@ export function CallToAction() {
           <CreditCardIcon className="inline-block size-4" />  required. 20 free credits daily.
         </p>
       </div>
-      <div className="flex items-center justify-center gap-2">
-        <Link href='/signup'>
-          <Button className="shadow cursor-pointer" variant="secondary">
+      <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+        <Button asChild className="w-full shadow sm:w-auto" variant="secondary">
+          <Link href='/signup'>
             Start Creating Free
-          </Button>
-        </Link>
-        <Link href='/tools'>
-          <Button className="shadow cursor-pointer" variant="outline">
+          </Link>
+        </Button>
+        <Button asChild className="w-full shadow sm:w-auto" variant="outline">
+          <Link href='/tools'>
             Explore PDF Tools
-          </Button>
-        </Link>
-        <Link href='/pricing'>
-          <Button className="shadow cursor-pointer">
+          </Link>
+        </Button>
+        <Button asChild className="w-full shadow sm:w-auto">
+          <Link href='/pricing'>
             View Pricing
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   );

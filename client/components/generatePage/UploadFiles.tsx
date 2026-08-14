@@ -167,6 +167,15 @@ export default function UploadFiles() {
             onClick={() => {
               if (!loading) document.getElementById("fileInput")?.click();
             }}
+            role="button"
+            tabIndex={loading ? -1 : 0}
+            aria-label="Upload a PDF reference document"
+            onKeyDown={(event) => {
+              if (!loading && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                document.getElementById("fileInput")?.click();
+              }
+            }}
           >
             <Upload
               className={`mx-auto mb-2 text-primary transition-transform duration-300 ${
